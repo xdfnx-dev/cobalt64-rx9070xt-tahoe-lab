@@ -1,0 +1,56 @@
+[
+  {
+    "case": "test_aux2_native",
+    "exit": 0,
+    "output": "AUX2 native transport: 127 checks passed (simulated I/O only).",
+    "hardware_access": false
+  },
+  {
+    "case": "test_dp2_source_control",
+    "exit": 0,
+    "output": "DP2 source control: 121 checks, 0 failures; simulated MMIO, no live GPU writes",
+    "hardware_access": false
+  },
+  {
+    "case": "test_dp2_stream_control",
+    "exit": 0,
+    "output": "DP2 stream transport: 344 checks passed (simulated I/O only).",
+    "hardware_access": false
+  },
+  {
+    "case": "test_link_training",
+    "exit": 0,
+    "output": "DP training protocol prototype: 340 checks, 0 failures; SIMULATED backend only",
+    "hardware_access": false
+  },
+  {
+    "case": "test_dto_clock",
+    "exit": 0,
+    "output": "DTO clock: 65 checks, 0 failures; no hardware access",
+    "hardware_access": false
+  },
+  {
+    "case": "test_fwmeta_scan",
+    "exit": 0,
+    "output": "Serialized FW metadata reader: 8433 checks, 0 failures; host model only",
+    "hardware_access": false
+  },
+  {
+    "case": "test_fwmeta_admission",
+    "exit": 0,
+    "output": "Firmware-reader API admission: 65539 checks, 0 failures; no GPU access",
+    "hardware_access": false
+  },
+  {
+    "case": "test_survey",
+    "exit": 0,
+    "output": "DP survey: 878 checks, 0 failures",
+    "hardware_access": false
+  },
+  {
+    "case": "DPControl/test_fw_query",
+    "exit": 0,
+    "output": "Fixed GPINT query: 63 checks passed, including pending/raced/timeout refusal.",
+    "hardware_access": false
+  }
+]

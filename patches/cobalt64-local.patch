@@ -1,0 +1,477 @@
+--- a/src/navi48-bringup/Info.plist
++++ b/src/navi48-bringup/Info.plist
+@@ -15,9 +15,9 @@
+ 	<key>CFBundlePackageType</key>
+ 	<string>KEXT</string>
+ 	<key>CFBundleShortVersionString</key>
+-	<string>0.0.664</string>
++	<string>0.0.665</string>
+ 	<key>CFBundleVersion</key>
+-	<string>0.0.664</string>
++	<string>0.0.665</string>
+ 	<key>IOKitPersonalities</key>
+ 	<dict>
+ 		<key>Navi48AccelPeer</key>
+--- a/src/navi48-bringup/src/amd/native_agdc_pure.h
++++ b/src/navi48-bringup/src/amd/native_agdc_pure.h
+@@ -41,9 +41,9 @@
+ 
+ // ---- the slide ---------------------------------------------------------------------------------------------------------------------------------------------
+ // Static (unslid) addresses in the System KC, read from the EXTRACTED kexts' symbol tables (~/navi48-native/re-s3/kexts, `nm`): com.apple.AppleGraphicsDeviceControl
+-// __ZN26AppleGraphicsDeviceControl10gMetaClassE = 0x13d418e8 and com.apple.iokit.IOAcceleratorFamily2 __ZN18IOAccelDisplayPipe10gMetaClassE = 0x146036d8.
+-constexpr uint64_t kAgdcMeta = 0x13d418e8ull;
+-constexpr uint64_t kPipeMeta = 0x146036d8ull;
++// __ZN26AppleGraphicsDeviceControl10gMetaClassE = 0x13d458e8 and com.apple.iokit.IOAcceleratorFamily2 __ZN18IOAccelDisplayPipe10gMetaClassE = 0x14be66d8.
++constexpr uint64_t kAgdcMeta = 0x13d458e8ull;
++constexpr uint64_t kPipeMeta = 0x14be66d8ull;
+ constexpr uint64_t kKernelHalf = 0xffffff7000000000ull;     // the bound DisplayPipeGuard.cpp's dpg_kptr and native_disp_pure.h use
+ constexpr bool kptr_ok(uint64_t p) { return p >= kKernelHalf; }
+ struct SlideOut { uint32_t status; uint64_t slide; };
+--- a/src/navi48-bringup/src/apple/DisplayPipeGuard.cpp
++++ b/src/navi48-bringup/src/apple/DisplayPipeGuard.cpp
+@@ -1651,16 +1651,16 @@
+ // B. The AGDC nub
+ // =====================================================================================================================
+ // Static (unslid) addresses in com.apple.AppleGraphicsDeviceControl, System KC, CONFIRMED from the bytes:
+-static constexpr uintptr_t kAgdcGMetaClass   = 0x13d418e8;   // AppleGraphicsDeviceControl::gMetaClass
+-static constexpr uintptr_t kAgdcVtable       = 0x13d40478;   // __ZTV26AppleGraphicsDeviceControl (slot 0 at +0x10)
++static constexpr uintptr_t kAgdcGMetaClass   = 0x13d458e8;   // AppleGraphicsDeviceControl::gMetaClass
++static constexpr uintptr_t kAgdcVtable       = 0x13d44478;   // __ZTV26AppleGraphicsDeviceControl (slot 0 at +0x10)
+ static constexpr unsigned  kAgdcVtSlots      = 276;          // slot 275 raw 0x0100000053d3e110 ends the chain
+-static constexpr uintptr_t kAgdcOpNew        = 0x13d3bea6;   // operator new(unsigned long): OSObject_typed_operator_new(ktv, n)
+-static constexpr uintptr_t kAgdcCtorMeta     = 0x13d3be34;   // AppleGraphicsDeviceControl(OSMetaClass const*): IOService ctor + vptr
+-static constexpr uintptr_t kAgdcD2           = 0x13d3be54;   // ~AppleGraphicsDeviceControl(): jmp IOService::~IOService
+-static constexpr uintptr_t kAgdcOpDelete     = 0x13d3beba;   // operator delete(void*, unsigned long)
+-static constexpr uintptr_t kAgdcStart        = 0x13d3c392;   // slot 184
+-static constexpr uintptr_t kAgdcNewUserClient= 0x13d3dcbe;   // slot 238
+-static constexpr uintptr_t kAgdcVendorBase   = 0x13d3dc34;   // slot 267 (calls slot 266 through *0x850)
++static constexpr uintptr_t kAgdcOpNew        = 0x13d3fea6;   // operator new(unsigned long): OSObject_typed_operator_new(ktv, n)
++static constexpr uintptr_t kAgdcCtorMeta     = 0x13d3fe34;   // AppleGraphicsDeviceControl(OSMetaClass const*): IOService ctor + vptr
++static constexpr uintptr_t kAgdcD2           = 0x13d3fe54;   // ~AppleGraphicsDeviceControl(): jmp IOService::~IOService
++static constexpr uintptr_t kAgdcOpDelete     = 0x13d3feba;   // operator delete(void*, unsigned long)
++static constexpr uintptr_t kAgdcStart        = 0x13d40392;   // slot 184
++static constexpr uintptr_t kAgdcNewUserClient= 0x13d41cbe;   // slot 238
++static constexpr uintptr_t kAgdcVendorBase   = 0x13d41c34;   // slot 267 (calls slot 266 through *0x850)
+ static constexpr uint32_t  kAgdcClassSize    = 0x110;        // MetaClass ctor 13d3be0f: b9 10 01 00 00
+ // First bytes of each function we call, from the extracted binary.
+ static const uint8_t kBytesOpNew[]    = { 0x55, 0x48, 0x89, 0xe5, 0x48, 0x89, 0xfe, 0x48, 0x8d, 0x3d };
+@@ -1939,7 +1939,7 @@
+     }
+     void **vt = reinterpret_cast<void **>(kAgdcVtable + slide + 16);
+     if (reinterpret_cast<uintptr_t>(vt[184]) - slide != kAgdcStart || reinterpret_cast<uintptr_t>(vt[238]) - slide != kAgdcNewUserClient ||
+-        reinterpret_cast<uintptr_t>(vt[267]) - slide != kAgdcVendorBase || reinterpret_cast<uintptr_t>(vt[7]) - slide != 0x13d3be5e) {
++        reinterpret_cast<uintptr_t>(vt[267]) - slide != kAgdcVendorBase || reinterpret_cast<uintptr_t>(vt[7]) - slide != 0x13d3fe5e) {
+         DPGLOG("agdc: REFUSED - AGDC vtable slots 7/184/238/267 do not name getMetaClass/start/newUserClient/vendor_doDeviceAttribute");
+         return 7;
+     }
+--- a/src/navi48-bringup/src/dcn/navi48_dcn.cpp
++++ b/src/navi48-bringup/src/dcn/navi48_dcn.cpp
+@@ -43,6 +43,7 @@
+ }
+ #include "navi48_liveraster.h"   // build 0.0.515: the read-only raster device (no bind dependency)
+ #include "navi48_dispread_flow.h"   // build 0.0.622 (M1): the sequences of ddcread / dmubring / dispcensus (host-tested over fake engines)
++#include "navi48_fwmeta_scan.h"
+ #include "navi48_dmubcmd_flow.h"     // build 0.0.625 (M2/M3): the sequences of dmubsend / dmubmode / dmubctx (host-tested over a fake DMUB)
+ #include "navi48_scanx_flow.h"       // build 0.0.661 (M6 Stage 1b): the sequences of instance 2's scanout (host-tested over a fake HUBP2)
+ #include "navi48_disp2_flow.h"       // build 0.0.631 (M4d): the sequence of `disp2 timing|connect|off|status` (host-tested over a register-file model with the real allowlist)
+@@ -1648,14 +1649,7 @@
+ 	uint64_t pixHz = 0ull;
+ 	uint32_t ha, va, ht, vt, hf, hs, vf, vs; uint64_t pc = 0;
+ 	if (n48lr_live(&gLr, &ha, &va, &ht, &vt, &hf, &hs, &vf, &vs, &pc) != 0u && ht == hTot && vt == vTot) pixHz = pc;
+-	if (pixHz == 0ull && otg == 0) {
+-		uint32_t prc = 0, phase = 0;
+-		const uint32_t a0 = dcn41_abs(d, 0x80u, 1u), a1 = dcn41_abs(d, 0x81u, 1u);
+-		if (a0 != DCN41_BAD_OFFSET && a1 != DCN41_BAD_OFFSET) {
+-			prc = d->rreg(d->cookie, a0); phase = d->rreg(d->cookie, a1);
+-			if ((prc & 0x10u) != 0u) pixHz = phase;
+-		}
+-	}
++	if (pixHz == 0ull) pixHz = n48lr_dto0_clock(&gLr, (uint32_t)otg);
+ 	const uint64_t p = n48disp::vbl_period_ns(hTot, vTot, pixHz);
+ 	if (p == 0ull) return false;
+ 	gVbl.otg = (uint32_t)otg; gVbl.hTot = hTot; gVbl.vTot = vTot; gVbl.periodNs = p; gVbl.atNs = nowNs; gVbl.valid = 1u;
+@@ -1751,12 +1745,9 @@
+ 		dcn41_otg_timing_decode(&tm, &td);
+ 		o->h_active = td.h_active; o->v_active = td.v_active; o->h_total = td.h_total; o->v_total = td.v_total;
+ 	}
+-	// The pixel clock: DP_DTO0 (OTG0_PIXEL_RATE_CNTL.DP_DTO0_ENABLE and DP_DTO0_PHASE, dcn_4_1_0_offset.h BASE_IDX 1: 0x80 / 0x81; the
+-	// census read 0x00011090 and phase 241,500,000). The DPDTO0_INT term of the dcn401 formula is taken as 0 (the review's reading of this
+-	// card); the check against the EDID row below is what says whether that held.
+-	const uint32_t prc = dcn_rreg(&gDcn, gDcn.seg[1] + 0x80u);
+-	const uint32_t phase = dcn_rreg(&gDcn, gDcn.seg[1] + 0x81u);
+-	uint64_t pixHz = ((prc & 0x10u) != 0u && otg == 0) ? phase : 0ull;
++	// The same full DTO formula feeds scanQuery and vblank timestamps, including
++	// DPDTO0_INT. This remains read-only and does not arm or change a mode.
++	uint64_t pixHz = n48lr_dto0_clock(&gLr, otg >= 0 ? (uint32_t)otg : 0xffffffffu);
+ 	if (pixHz != 0ull) flags |= N48N_SCANQ_DTO_VALID;
+ 	else {
+ 		uint32_t ha, va, ht, vt, hf, hs, vf, vs; uint64_t pc = 0;
+@@ -2470,6 +2461,22 @@
+ 	const uint64_t ringOff = (known && st.ring_addr >= st.fb_base_mc) ? st.ring_addr - st.fb_base_mc : ~0ull;
+ 	uint32_t sane = 0u;
+ 	const uint32_t ncmd = n48dr_ring_count(st.inbox1_size, st.inbox1_wptr, &sane);
++	if (arg == N48DR_DMUB_PAGE_FWMETA) {
++		struct MetaEnv {
++			bool read(uint64_t off, uint32_t *w, uint32_t n) { return navi48_vram_read_mm(off,w,n); }
++			uint64_t now_us() { return now_ns()/1000ull; }
++		} env;
++		const uint64_t r4mc=((uint64_t)st.region4_offset_high<<32)|st.region4_offset;
++		if (!dev || !st.enabled || st.soft_reset || r4mc<=st.fb_base_mc) {
++			out[0]=N48DR_REGION4_BAD;return N48DR_REGION4_BAD;
++		}
++		const n48fw::Result m=n48fw::scan(env,r4mc-st.fb_base_mc,dev->vramSizeBytes);
++		out[0]=(uint64_t)m.status|((uint64_t)m.chunks<<32);
++		out[1]=m.address;out[2]=r4mc-st.fb_base_mc;
++		for(unsigned i=0;i<4;i++)out[3+i]=(uint64_t)m.words[2*i]|((uint64_t)m.words[2*i+1]<<32);
++		N48LOG("dmub-fwmeta: candidate status %u chunks %u address %#llx version %#x; NOT firmware ABI verification",m.status,m.chunks,m.address,m.words[3]);
++		return m.status;
++	}
+ 	if (arg == 0u) {
+ 		struct n48dr_dmub_summary s;
+ 		for (unsigned i = 0; i < sizeof(s); i++) ((uint8_t *)&s)[i] = 0;
+--- a/src/navi48-bringup/src/dcn/navi48_dispread.h
++++ b/src/navi48-bringup/src/dcn/navi48_dispread.h
+@@ -330,6 +330,7 @@
+ #define N48DR_DMUB_CMD_SIZE 64u
+ #define N48DR_DMUB_MAX_DECODE 25u                 /* the brief: up to 25 commands between ring start and WPTR */
+ #define N48DR_DMUB_PAYLOAD_SHOWN 32u              /* first 32 payload bytes of each command */
++#define N48DR_DMUB_PAGE_FWMETA 0x81u
+ #define N48DR_DMUB_PAGE_SCRATCH 0x80u             /* dmubring page: the SCRATCH bank */
+ #define N48DR_DMUB_SCRATCH_FIRST 0x01e3u          /* regDMCUB_SCRATCH0 .. SCRATCH18 = 0x01e3 .. 0x01f5, BASE_IDX 2 */
+ #define N48DR_DMUB_SCRATCH_COUNT 19u
+@@ -380,7 +381,7 @@
+     return n > N48DR_DMUB_MAX_DECODE ? N48DR_DMUB_MAX_DECODE : n;
+ }
+ // dmubring page p (1..25) decodes command p - 1; 0 = the summary; 0x80 = the SCRATCH bank.
+-static inline int n48dr_dmub_arg_ok(uint64_t arg) { return arg <= N48DR_DMUB_MAX_DECODE || arg == N48DR_DMUB_PAGE_SCRATCH; }
++static inline int n48dr_dmub_arg_ok(uint64_t arg) { return arg <= N48DR_DMUB_MAX_DECODE || arg == N48DR_DMUB_PAGE_SCRATCH || arg == N48DR_DMUB_PAGE_FWMETA; }
+ // Can the ring (vram offset, size) be read through the BAR0 aperture the kext maps (bar0Size bytes from VRAM offset 0)? The overflow-safe test the glue uses.
+ static inline int n48dr_ring_in_bar0(uint64_t ring_vram_off, uint64_t ring_bytes, uint64_t bar0_size)
+ {
+--- a/src/navi48-bringup/src/dcn/navi48_liveraster.h
++++ b/src/navi48-bringup/src/dcn/navi48_liveraster.h
+@@ -20,6 +20,7 @@
+ 
+ #include <stdint.h>
+ #include <stddef.h>
++#include "navi48_dto_clock.h"
+ extern "C" {
+ #include "dcn41.h"
+ #include "dcn41_modes.h"
+@@ -81,6 +82,24 @@
+         return 1u;
+     }
+     return 0u;
++}
++
++/* DTO0 is BASE_IDX 1. The write resolver deliberately permits only BASE_IDX 2;
++ * use the read resolver here, keeping the write allowlist unchanged. Only OTG0
++ * has this known DTO source. The caller has already checked its active raster. */
++static inline uint64_t n48lr_dto0_clock(n48lr_ro *ro, uint32_t otg)
++{
++    if (!ro || ro->state != N48LR_READY || otg != 0u) return 0ull;
++    struct dcn41_dev *d = &ro->d;
++    const uint32_t cntl = dcn41_abs_rd(d, 0x80u, 1u);
++    const uint32_t phase = dcn41_abs_rd(d, 0x81u, 1u);
++    const uint32_t modulo = dcn41_abs_rd(d, 0x82u, 1u);
++    const uint32_t rate = dcn41_abs_rd(d, 0x6fu, 1u);
++    if (cntl == DCN41_BAD_OFFSET || phase == DCN41_BAD_OFFSET ||
++        modulo == DCN41_BAD_OFFSET || rate == DCN41_BAD_OFFSET) return 0ull;
++    const uint32_t control=d->rreg(d->cookie,cntl);
++    if (control==0xffffffffu || !(control&0x10u)) return 0ull;
++    return n48dto0_decode(control,d->rreg(d->cookie,phase),d->rreg(d->cookie,modulo),d->rreg(d->cookie,rate));
+ }
+ 
+ /* build 0.0.542 (apple/scanout_full.h, `accel scanout full`): WHAT THE DISPLAY ENGINE IS SCANNING, READ-ONLY, through the SAME
+--- a/src/navi48-bringup/tests/dcn_liveraster_test.cpp
++++ b/src/navi48-bringup/tests/dcn_liveraster_test.cpp
+@@ -201,6 +201,45 @@
+         const std::string ad = body_of(dpg, "static uint32_t agdc_live_raster(void *ctx, n48_agdc_raster *lr) {");
+         expect_u("D4 the adapter is n48dcn::liveRaster", count(ad, "return n48dcn::liveRaster(&lr->h_active"), 1u);
+     }
++    // E: our 4K DP raster has no row in the author's EDID table. DTO0 must
++    // remain readable without enabling any write access to BASE_IDX 1.
++    {
++        Regs *m = static_cast<Regs *>(std::calloc(1, sizeof(Regs)));
++        static n48lr_ro ro; std::memset(&ro, 0, sizeof ro);
++        (void)n48lr_ro_build(&ro, m, &r_read, SEG, MMIO_DWORDS);
++        m->mem[0x140u] = 0x00011090u;
++        m->mem[0x141u] = 533250000u;
++        m->mem[0x142u] = 720000000u;
++        m->mem[0x12fu] = 0x8421u;
++        Regs before = *m;
++        expect_u("E1 write resolver still denies BASE_IDX 1", dcn41_abs(&ro.d, 0x80u, 1u), DCN41_BAD_OFFSET);
++        expect_u("E1 read resolver accepts DTO0", dcn41_abs_rd(&ro.d, 0x80u, 1u), 0x140u);
++        expect_u("E2 actual DP DTO0 clock 533.25 MHz", n48lr_dto0_clock(&ro, 0u), 533250000ull);
++        expect_u("E2 no register changed", std::memcmp(m->mem, before.mem, sizeof m->mem) == 0, 1u);
++        m->mem[0x141u]=346560000u;m->mem[0x12fu]=0x8423u;
++        expect_u("E2 4K120 full DTO integer plus phase",n48lr_dto0_clock(&ro,0u),1066560000ull);
++        m->mem[0x141u]=0u;
++        expect_u("E2 integer-only DTO clock remains valid",n48lr_dto0_clock(&ro,0u),720000000ull);
++        m->mem[0x141u]=720000000u;
++        expect_u("E2 invalid phase not less than modulo refused",n48lr_dto0_clock(&ro,0u),0ull);
++        m->mem[0x141u]=533250000u;m->mem[0x12fu]=0x8421u;
++        uint32_t reads = m->reads;
++        expect_u("E3 another OTG cannot borrow DTO0", n48lr_dto0_clock(&ro, 1u), 0ull);
++        expect_u("E3 refused OTG reads nothing", m->reads, reads);
++        m->mem[0x140u] &= ~0x10u;
++        expect_u("E4 disabled DTO0 rejected", n48lr_dto0_clock(&ro, 0u), 0ull);
++        m->mem[0x140u] |= 0x10u; m->mem[0x141u] = 0u;
++        expect_u("E4 zero DTO phase rejected", n48lr_dto0_clock(&ro, 0u), 0ull);
++        ro.d.mmio_dwords = 0x141u; m->reads = 0u;
++        expect_u("E5 unmapped DTO pair rejected", n48lr_dto0_clock(&ro, 0u), 0ull);
++        expect_u("E5 invalid pair reads nothing", m->reads, 0u);
++        ro.state = N48LR_FAILED;
++        expect_u("E6 failed read-only device rejected", n48lr_dto0_clock(&ro, 0u), 0ull);
++        expect_u("E6 null device rejected", n48lr_dto0_clock(nullptr, 0u), 0ull);
++        const std::string dcn = slurp(argc > 1 ? argv[1] : nullptr);
++        expect_u("E7 vblank fallback uses tested read helper", count(body_of(dcn, "bool vbl_refresh(uint64_t nowNs) {"), "n48lr_dto0_clock(&gLr, (uint32_t)otg)"), 1u);
++        std::free(m);
++    }
+     std::printf("dcn_liveraster: %d run, %d FAILED\n", gRun, gFail);
+     return gFail ? 1 : 0;
+ }
+--- a/src/navi48-bringup/tests/native_agdc_plant.sh
++++ b/src/navi48-bringup/tests/native_agdc_plant.sh
+@@ -78,8 +78,8 @@
+ 
+ control()
+ # ---- the pure decisions (amd/native_agdc_pure.h, amd/native_disp_pure.h) --------------------------------------------------------------------------------------------
+-plant(1, PURE, 'the AGDC anchor address is wrong', 'constexpr uint64_t kAgdcMeta = 0x13d418e8ull;', 'constexpr uint64_t kAgdcMeta = 0x13d418e0ull;')
+-plant(2, PURE, 'the family anchor address is wrong', 'constexpr uint64_t kPipeMeta = 0x146036d8ull;', 'constexpr uint64_t kPipeMeta = 0x146036d0ull;')
++plant(1, PURE, 'the AGDC anchor address is wrong', 'constexpr uint64_t kAgdcMeta = 0x13d458e8ull;', 'constexpr uint64_t kAgdcMeta = 0x13d418e0ull;')
++plant(2, PURE, 'the family anchor address is wrong', 'constexpr uint64_t kPipeMeta = 0x14be66d8ull;', 'constexpr uint64_t kPipeMeta = 0x146036d0ull;')
+ plant(3, PURE, 'the slides need not agree', '((agdcMeta - kAgdcMeta) != (pipeMeta - kPipeMeta) || ((agdcMeta - kAgdcMeta) & 0xfffull) != 0ull)', '(((agdcMeta - kAgdcMeta) & 0xfffull) != 0ull)')
+ plant(4, PURE, 'the slide need not be page aligned', '((agdcMeta - kAgdcMeta) != (pipeMeta - kPipeMeta) || ((agdcMeta - kAgdcMeta) & 0xfffull) != 0ull)', '((agdcMeta - kAgdcMeta) != (pipeMeta - kPipeMeta))')
+ plant(5, PURE, 'the family metaclass need not be a kernel pointer', 'return (!kptr_ok(agdcMeta) || !kptr_ok(pipeMeta)) ?', 'return (!kptr_ok(agdcMeta)) ?')
+@@ -125,14 +125,14 @@
+ plant(45, DPG, 'the native class checks depend on X6000', '        const uint32_t cc = agdc_class_checks(reinterpret_cast<const OSMetaClass *>(static_cast<uintptr_t>(am)), static_cast<uintptr_t>(slide));', '        (void)navi48_x6000_slide(nullptr);\n        const uint32_t cc = agdc_class_checks(reinterpret_cast<const OSMetaClass *>(static_cast<uintptr_t>(am)), static_cast<uintptr_t>(slide));')
+ plant(46, DPG, 'finish gives the framebuffer back even after a publish', 'if (fb && st != n48agdc::kPublished) fb->release();', 'if (fb) fb->release();')
+ plantm(47, DPG, 'the flow runs before the lock is taken', [('    IOLockLock(gDpgLock);\n    const uint32_t st = n48agdc::native_flow(env, arg);\n    if (arg == 1ull) gAg.lastStatus = st;\n    IOLockUnlock(gDpgLock);', '    const uint32_t st = n48agdc::native_flow(env, arg);\n    IOLockLock(gDpgLock);\n    if (arg == 1ull) gAg.lastStatus = st;\n    IOLockUnlock(gDpgLock);')])
+-plant(48, DPG, 'the vtable slot 7 check reads slot 6', 'reinterpret_cast<uintptr_t>(vt[7]) - slide != 0x13d3be5e', 'reinterpret_cast<uintptr_t>(vt[6]) - slide != 0x13d3be5e')
++plant(48, DPG, 'the vtable slot 7 check reads slot 6', 'reinterpret_cast<uintptr_t>(vt[7]) - slide != 0x13d3fe5e', 'reinterpret_cast<uintptr_t>(vt[6]) - slide != 0x13d3fe5e')
+ plant(49, DPG, 'the class size check is loosened', 'if (mc->getClassSize() != kAgdcClassSize) { DPGLOG("agdc: REFUSED - class size', 'if (mc->getClassSize() > kAgdcClassSize) { DPGLOG("agdc: REFUSED - class size')
+ plant(50, DPG, 'the shared build forgets slot 266', '    copy[kVtHdr + 266] = reinterpret_cast<void *>(&agdc_vendor);\n', '')
+ plant(51, DPG, 'the translation route drops its pipe-guard requirement', '    if (!navi48_pipeguard_armed_all()) return 2;\n', '')
+ plant(52, DPG, 'the translation route drops its wrangler check', '    if (!agdc_have_wrangler()) return 9;\n    return agdc_build_locked(mc, slide, fb, pci, provider);', '    return agdc_build_locked(mc, slide, fb, pci, provider);')
+ plant(53, DPG, 'the env looks the framebuffer up under one name only', 'static const char *const kNames[2] = { "RDNA4FB", "AMDRDNA4FB" };', 'static const char *const kNames[2] = { "RDNA4FB", "RDNA4FB" };')
+ plant(54, DPG, 'the env skips the framebuffer name check', 'bool ok = fb && mc && n48agdc::fb_name_ok(mc->getClassName()) && pci && provider;', 'bool ok = fb && mc && pci && provider;')
+-plant(55, DPG, 'the glue anchor differs from the pure header\'s', 'kAgdcGMetaClass   = 0x13d418e8;', 'kAgdcGMetaClass   = 0x13d418e0;')
++plant(55, DPG, 'the glue anchor differs from the pure header\'s', 'kAgdcGMetaClass   = 0x13d458e8;', 'kAgdcGMetaClass   = 0x13d418e0;')
+ plant(56, DPG, 'the native control does not return the shared scalars', 'DPGLOG("agdc: native publish -> status %u (%s)", st, n48agdc::status_name(st));\n    agdc_fill_out(st, out, count);', 'DPGLOG("agdc: native publish -> status %u (%s)", st, n48agdc::status_name(st));\n    (void)out; (void)count;')
+ plant(57, DPG, 'finish is never called', '    env.finish(st);\n', '')
+ plant(58, DPG, 'the native env takes a lock of its own', '    bool wrangler() { return agdc_have_wrangler(); }', '    bool wrangler() { IOLockLock(gDpgLock); return agdc_have_wrangler(); }')
+--- a/src/navi48-bringup/tests/native_agdc_test.cpp
++++ b/src/navi48-bringup/tests/native_agdc_test.cpp
+@@ -70,8 +70,8 @@
+     // P. the pure decisions
+     // =========================================================================================================================================================
+     // The two anchors, pinned to the LITERAL numbers of the extracted kexts' symbol tables (nm: AppleGraphicsDeviceControl gMetaClass, IOAcceleratorFamily2 IOAccelDisplayPipe::gMetaClass).
+-    expect_u("the AGDC metaclass static", kAgdcMeta, 0x13d418e8ull);
+-    expect_u("the IOAccelDisplayPipe metaclass static", kPipeMeta, 0x146036d8ull);
++    expect_u("the AGDC metaclass static", kAgdcMeta, 0x13d458e8ull);
++    expect_u("the IOAccelDisplayPipe metaclass static", kPipeMeta, 0x14be66d8ull);
+     expect(kActAgdc == 88u && n48disp::kActAgdc == 88u && kActAgdc == n48disp::kActAgdc && n48disp::kLastAction == 99u && n48disp::kActVbl == 89u && n48disp::kActReload == 90u, "the verb is action 88 in both headers; 99 (scdcread, 0.0.633; disp2 is 98) is the last admitted action");
+ 
+     { const SlideOut s = slide_decide(AMC, PMC);
+@@ -94,7 +94,7 @@
+       expect(kptr_ok(sl + kAgdcMeta) && !kptr_ok(sl + kPipeMeta) && ((sl + kAgdcMeta) - kAgdcMeta) == ((sl + kPipeMeta) - kPipeMeta) && (sl & 0xfffull) == 0ull, "test setup: equal page-aligned slides, only the family metaclass outside the kernel half");
+       expect(o.status == kSlide && o.slide == 0ull, "agreeing slides with the family metaclass wrapped past 2^64: refused"); }
+     expect_u("the kernel-half bound is the project's (DisplayPipeGuard.cpp dpg_kptr, native_disp_pure.h)", kKernelHalf, 0xffffff7000000000ull);
+-    expect(kptr_ok(0xffffff7000000000ull) && !kptr_ok(0xffffff6fffffffffull) && !kptr_ok(0ull) && !kptr_ok(0x13d418e8ull), "kptr_ok: the kernel half only");
++    expect(kptr_ok(0xffffff7000000000ull) && !kptr_ok(0xffffff6fffffffffull) && !kptr_ok(0ull) && !kptr_ok(0x13d458e8ull), "kptr_ok: the kernel half only");
+     { const SlideOut s = slide_decide(kKernelHalf + kAgdcMeta, kKernelHalf + kPipeMeta);
+       expect(s.status == kPublished && s.slide == kKernelHalf, "the smallest admissible slide is the kernel-half base"); }
+     { const SlideOut s = slide_decide(AMC, kKernelHalf + 0x100);
+@@ -244,8 +244,8 @@
+                "the translation route uses the same shared class checks, wrangler check and build");
+         expect(count_of(dpg, "agdc_build_locked(") == 3 && count_of(dpg, "agdc_class_checks(") == 3 && count_of(dpg, "agdc_have_wrangler()") == 3, "each shared piece is defined once and called from exactly the two routes");
+         // the static anchors: the glue's and the pure header's are the same numbers
+-        expect(dpg.find("kAgdcGMetaClass   = 0x13d418e8;") != std::string::npos && pure.find("kAgdcMeta = 0x13d418e8ull;") != std::string::npos, "the AGDC anchor is the same number in the glue and in the pure header");
+-        expect(pure.find("kPipeMeta = 0x146036d8ull;") != std::string::npos, "the family anchor literal");
++        expect(dpg.find("kAgdcGMetaClass   = 0x13d458e8;") != std::string::npos && pure.find("kAgdcMeta = 0x13d458e8ull;") != std::string::npos, "the AGDC anchor is the same number in the glue and in the pure header");
++        expect(pure.find("kPipeMeta = 0x14be66d8ull;") != std::string::npos, "the family anchor literal");
+         // the class checks keep all three groups of checks
+         { const size_t cA = dpg.find("static uint32_t agdc_class_checks("), cB = dpg.find("static bool agdc_have_wrangler()");
+           const std::string cc = (cA != std::string::npos && cB != std::string::npos && cA < cB) ? dpg.substr(cA, cB - cA) : std::string();
+--- a/src/navi48-bringup/tests/native_dispread_test.cpp
++++ b/src/navi48-bringup/tests/native_dispread_test.cpp
+@@ -521,7 +521,7 @@
+     expect_u("page verdict: page 26 is out of range", n48dr::ring_page_verdict(26, true, 8192, 0x640, 0x1000, bar0), N48DR_PAGE_RANGE);
+     expect_u("page verdict: page 0 is not a command page", n48dr::ring_page_verdict(0, true, 8192, 0x640, 0x1000, bar0), N48DR_PAGE_RANGE);
+     expect_u("page verdict: only 3 commands in the ring, page 4", n48dr::ring_page_verdict(4, true, 8192, 192, 0x1000, bar0), N48DR_PAGE_RANGE);
+-    expect(n48dr_dmub_arg_ok(0) && n48dr_dmub_arg_ok(25) && n48dr_dmub_arg_ok(0x80) && !n48dr_dmub_arg_ok(26) && !n48dr_dmub_arg_ok(0x81) && !n48dr_dmub_arg_ok(~0ull), "dmubring arguments: 0, 1..25, 0x80");
++    expect(n48dr_dmub_arg_ok(0) && n48dr_dmub_arg_ok(25) && n48dr_dmub_arg_ok(0x80) && !n48dr_dmub_arg_ok(26) && n48dr_dmub_arg_ok(0x81) && !n48dr_dmub_arg_ok(0x82) && !n48dr_dmub_arg_ok(~0ull), "dmubring arguments: 0, 1..25, 0x80");
+     // the ring reader: only [off + 64 * idx, + 36) of its command, through the BAR0 reader
+     FakeVram vr; const uint64_t base = 0x2000;
+     for (uint32_t c = 0; c < 25; c++) for (uint32_t d = 0; d < 16; d++) vr.m[base + c * 64 + d * 4] = 0xC0000000u | (c << 8) | d;
+--- a/tools/native/mtlprobe/mtlprobe.m
++++ b/tools/native/mtlprobe/mtlprobe.m
+@@ -1700,7 +1700,7 @@
+ // On any other device (an Apple-silicon Mac's AGX) the selector is absent and the command REFUSES cleanly (exit 3). Needs the PC with WindowServer NOT holding N48N: see NATIVE-S5-FLIP.md "S5.2a build".
+ static uint64_t df_now(void) { return clock_gettime_nsec_np(CLOCK_UPTIME_RAW); }
+ static double df_num(NSDictionary *d, NSString *k) { return [d[k] doubleValue]; }
+-static int cmd_dispflip(uint64_t rid, int haveRid, int seconds) {
++static int cmd_dispflip(uint64_t rid, int haveRid, int seconds, int DW, int DH) {
+     setenv("N48M_TEST_DISPFLIP", "1", 1);   // read by the bundle (honoured only as root with N48M_ALLOW=1)
+     id<MTLDevice> dev = pick_device(rid, haveRid); if (!dev) return 2;
+     if (![(NSObject *)dev respondsToSelector:NSSelectorFromString(@"n48ScanoutStats")]) {
+@@ -1709,7 +1709,7 @@
+     }
+     NSDictionary *(*stats)(id, SEL) = (NSDictionary *(*)(id, SEL))objc_msgSend;
+     NSDictionary *(*rel)(id, SEL) = (NSDictionary *(*)(id, SEL))objc_msgSend;
+-    const int DW = 2560, DH = 1440;
++    if (DW < 64 || DH < 64 || DW > 8192 || DH > 8192) return 64;
+     id<MTLLibrary> lib = n_lib(dev); if (!lib) return 2;
+     id<MTLFunction> vs = [lib newFunctionWithName:@"blend_vs"], fs = [lib newFunctionWithName:@"blend_fs"];
+     if (!vs || !fs) { printf("mtlprobe: FAIL functions\n"); return 2; }
+@@ -1718,7 +1718,7 @@
+     NSError *err = nil; id<MTLRenderPipelineState> pso = [dev newRenderPipelineStateWithDescriptor:pd error:&err]; perr("dispflip pso", err);
+     IOSurfaceRef surf = io_make(DW, DH);
+     if (!pso || !surf) { printf("mtlprobe: FAIL pipeline/IOSurfaceCreate\n"); return 2; }
+-    printf("mtlprobe: dispflip: IOSurface id %u %zux%zu bytesPerRow %zu allocSize %zu (display plane: pitch 10240)\n", IOSurfaceGetID(surf), IOSurfaceGetWidth(surf), IOSurfaceGetHeight(surf), IOSurfaceGetBytesPerRow(surf), IOSurfaceGetAllocSize(surf));
++    printf("mtlprobe: dispflip: IOSurface id %u %zux%zu bytesPerRow %zu allocSize %zu (requested plane: pitch %d)\n", IOSurfaceGetID(surf), IOSurfaceGetWidth(surf), IOSurfaceGetHeight(surf), IOSurfaceGetBytesPerRow(surf), IOSurfaceGetAllocSize(surf), DW * 4);
+     id<MTLTexture> tex = io_tex(dev, surf, DW, DH, MTLTextureUsageRenderTarget | MTLTextureUsageShaderRead);
+     id<MTLCommandQueue> q = [dev newCommandQueue];
+     if (!tex || !q) { printf("mtlprobe: FAIL texture/queue\n"); return 2; }
+@@ -1943,8 +1943,37 @@
+ #if !defined(__arm64__)
+     // ---- (iv) refusals (bundle behaviour: nil + log; real Metal asserts on some of these, so the host Mac does not run this) ----
+     { int f4 = 0;
+-      id<MTLTexture> n1 = io_tex(dev, sa, 128, 128, MTLTextureUsageShaderRead);   // descriptor size != surface size
+-      printf("mtlprobe: iosurface (iv): descriptor 128x128 on a 256x256 surface -> %s\n", n1 ? "NON-NIL (unexpected)" : "nil (refused)"); if (n1) f4++;
++      // Build 7 intentionally accepts a descriptor inside the IOSurface plane
++      // (n48_plane.h). Verify its contents and the untouched surrounding pixels.
++      NSData *beforeCrop = io_read(sa, W, H);
++      id<MTLTexture> n1 = io_tex(dev, sa, 128, 128, MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget);
++      printf("mtlprobe: iosurface (iv): cropped descriptor 128x128 on 256x256 -> %s\n", n1 ? "NON-NIL" : "NIL");
++      if (!n1) f4++;
++      else {
++          MTLRenderPassDescriptor *cr = [MTLRenderPassDescriptor renderPassDescriptor];
++          cr.colorAttachments[0].texture = n1;
++          cr.colorAttachments[0].loadAction = MTLLoadActionClear;
++          cr.colorAttachments[0].storeAction = MTLStoreActionStore;
++          cr.colorAttachments[0].clearColor = MTLClearColorMake(0.25, 0.5, 0.75, 1.0);
++          id<MTLCommandBuffer> cc = [q commandBuffer];
++          id<MTLRenderCommandEncoder> ce = [cc renderCommandEncoderWithDescriptor:cr];
++          [ce endEncoding]; [cc commit]; [cc waitUntilCompleted];
++          NSData *afterCrop = io_read(sa, W, H);
++          const uint8_t *bb = beforeCrop.bytes, *aa = afterCrop.bytes;
++          int cropBad = 0, outerBad = 0;
++          const int expectedCrop[4] = {191,128,64,255};
++          for (int y = 0; y < H; y++) for (int x = 0; x < W; x++) {
++              int off = (y * W + x) * 4;
++              if (x < 128 && y < 128) {
++                  for (int c = 0; c < 4; c++) if (abs((int)aa[off+c]-expectedCrop[c]) > 1) cropBad++;
++              } else if (memcmp(aa+off, bb+off, 4)) outerBad++;
++          }
++          printf("mtlprobe: iosurface (iv): cropped clear status=%ld; bad channels=%d; changed outside pixels=%d\n", (long)cc.status, cropBad, outerBad);
++          if (cc.status != MTLCommandBufferStatusCompleted || cc.error || cropBad || outerBad) f4++;
++      }
++      id<MTLTexture> oversize = io_tex(dev, sa, W+1, H, MTLTextureUsageShaderRead);
++      printf("mtlprobe: iosurface (iv): oversized descriptor -> %s\n", oversize ? "NON-NIL (unexpected)" : "nil (refused)");
++      if (oversize) f4++;
+       int32_t v8[3] = { 64, 64, 1 }; CFNumberRef n8w = CFNumberCreate(NULL, kCFNumberSInt32Type, &v8[0]), n8h = CFNumberCreate(NULL, kCFNumberSInt32Type, &v8[1]), n8b = CFNumberCreate(NULL, kCFNumberSInt32Type, &v8[2]);
+       CFMutableDictionaryRef pr = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+       CFDictionarySetValue(pr, kIOSurfaceWidth, n8w); CFDictionarySetValue(pr, kIOSurfaceHeight, n8h); CFDictionarySetValue(pr, kIOSurfaceBytesPerElement, n8b);
+@@ -3793,14 +3822,16 @@
+             return argv[1][1] == 'o' ? cmd_commit(rid, haveRid) : cmd_clear(rid, haveRid, out);
+         }
+         if (!strcmp(argv[1], "dispflip")) {
+-            uint64_t rid = 0; int haveRid = 0, secs = 10;
++            uint64_t rid = 0; int haveRid = 0, secs = 10, dw = 2560, dh = 1440;
+             for (int i = 2; i < argc; i++) {
+                 if (!strcmp(argv[i], "--registry-id") && i + 1 < argc) { rid = strtoull(argv[++i], NULL, 0); haveRid = 1; }
+                 else if (!strcmp(argv[i], "--seconds") && i + 1 < argc) secs = atoi(argv[++i]);
++                else if (!strcmp(argv[i], "--width") && i + 1 < argc) dw = atoi(argv[++i]);
++                else if (!strcmp(argv[i], "--height") && i + 1 < argc) dh = atoi(argv[++i]);
+                 else { fprintf(stderr, "usage: mtlprobe dispflip [--seconds N] [--registry-id N]\n"); return 64; }
+             }
+             if (secs < 1) secs = 1;
+-            return cmd_dispflip(rid, haveRid, secs);
++            return cmd_dispflip(rid, haveRid, secs, dw, dh);
+         }
+         if (!strcmp(argv[1], "frames") || !strcmp(argv[1], "timeout")) {
+             uint64_t rid = 0; int haveRid = 0, N = !strcmp(argv[1], "frames") ? 1000 : 3000, inflight = 0;
+--- a/tools/pc/navi48test.c
++++ b/tools/pc/navi48test.c
+@@ -699,6 +699,14 @@
+     if (!n48dr_dmub_arg_ok(pg)) { fprintf(stderr, "usage: accel dmubring [0 summary | 1..25 one command | 0x80 SCRATCH bank]   (READ-ONLY; no DMUB command is ever sent)\n"); return 2; }
+     if (dr_call(N48DR_ACT_DMUBRING, 0, o) != 0) return 1;
+     const uint64_t *v = o + 3;
++    if (pg == N48DR_DMUB_PAGE_FWMETA) {
++        if (dr_call(N48DR_ACT_DMUBRING, pg, o) != 0) return 1;
++        v = o + 3;
++        printf("DMUB metadata candidate: status %u chunks %u address %#llx anchor %#llx\n", (unsigned)v[0],(unsigned)(v[0]>>32),(unsigned long long)v[1],(unsigned long long)v[2]);
++        for(unsigned i=0;i<8;i++)printf("  word%u = %08x\n",i,(unsigned)(v[3+i/2]>>(32*(i&1))));
++        printf("This metadata candidate does not verify firmware command ABI.\n");
++        return (unsigned)v[0] ? 1 : 0;
++    }
+     if (pg == N48DR_DMUB_PAGE_SCRATCH) {
+         if (dr_call(N48DR_ACT_DMUBRING, pg, o) != 0) return 1;
+         v = o + 3;
+--- /dev/null
++++ b/src/navi48-bringup/src/dcn/navi48_dto_clock.h
+@@ -0,0 +1,23 @@
++#pragma once
++#include <stdint.h>
++
++// DCN4.1 dccg401_set_dp_dto: pixelHz = integer*modulo + phase.
++// DPDTO0_INT occupies bits 4:1 of OTG_PIXEL_RATE_DIV. These helpers do no I/O.
++// Reference: Linux 238650ef6c7c dc/dccg/dcn401/dcn401_dccg.c.
++static inline uint64_t n48dto0_decode(uint32_t cntl,uint32_t phase,uint32_t modulo,uint32_t rate)
++{
++    if (cntl==0xffffffffu || phase==0xffffffffu || modulo==0xffffffffu || rate==0xffffffffu ||
++        !(cntl&0x10u) || !modulo || phase>=modulo) return 0;
++    return (uint64_t)((rate&0x1eu)>>1)*modulo+phase;
++}
++static inline bool n48dto0_encode(uint64_t pixelHz,uint32_t referenceHz,uint32_t oldRate,
++                                 uint32_t *phase,uint32_t *modulo,uint32_t *rate)
++{
++    if (!phase || !modulo || !rate || !pixelHz || !referenceHz || referenceHz==0xffffffffu ||
++        oldRate==0xffffffffu || pixelHz/referenceHz>15u) return false;
++    uint32_t integer=(uint32_t)(pixelHz/referenceHz);
++    *phase=(uint32_t)(pixelHz-(uint64_t)integer*referenceHz);
++    *modulo=referenceHz;
++    *rate=(oldRate&~0x1eu)|(integer<<1);
++    return true;
++}
+--- /dev/null
++++ b/src/navi48-bringup/src/dcn/navi48_fwmeta_scan.h
+@@ -0,0 +1,36 @@
++#pragma once
++#include <stdint.h>
++// A bounded metadata-candidate reader, never a firmware-ABI admission rule.
++// E.read uses Cobalt64's serialized MM_INDEX reader. No command submission.
++namespace n48fw {
++enum Status:uint32_t { Found=0, InvalidRange=1, ReadFailed=2, NotFound=3, Deadline=4 };
++struct Result { uint32_t status=InvalidRange,chunks=0;uint64_t address=0;uint32_t words[8]={}; };
++template<class E> Result scan(E&e,uint64_t anchor,uint64_t vramSize){
++ Result r;
++ const uint64_t limit=0x100000;
++ if(anchor<256 || anchor>vramSize || (anchor&3))return r;
++ const uint64_t begin=anchor>limit?anchor-limit:0;
++ const uint64_t started=e.now_us();
++ for(uint64_t high=anchor;high>begin;){
++  if(e.now_us()-started>2000000ull){r.status=Deadline;return r;}
++  const uint32_t n=(uint32_t)((high-begin>=256?256:high-begin)/4);
++  const uint64_t low=high-(uint64_t)n*4;
++  uint32_t w[64]={};
++  if(!e.read(low,w,n)){r.status=ReadFailed;return r;}
++  ++r.chunks;
++  for(uint32_t k=n;k-->0;){
++   if(w[k]!=0x444d5542u)continue;
++   uint64_t at=low+(uint64_t)k*4;
++   if(anchor-at<32)continue;
++   uint32_t m[8]={};
++   if(!e.read(at,m,8)){r.status=ReadFailed;return r;}
++   // A matching version does NOT establish identical image or VBIOS ABI.
++   if(m[0]!=0x444d5542u || !m[3] || m[3]==0xffffffffu || (m[4]&255)>1)continue;
++   for(unsigned j=0;j<8;j++)r.words[j]=m[j];
++   r.address=at;r.status=Found;return r;
++  }
++  high=low;
++ }
++ r.status=NotFound;return r;
++}
++}

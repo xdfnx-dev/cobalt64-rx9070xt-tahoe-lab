@@ -1,0 +1,122 @@
+{
+  "DP_VID_STREAM_CNTL": {
+    "abs_dword": 22570,
+    "fields": {
+      "DP_VID_STREAM_ENABLE": {
+        "mask": 1,
+        "shift": 0
+      },
+      "DP_VID_STREAM_STATUS": {
+        "mask": 65536,
+        "shift": 16
+      },
+      "DP_VID_STREAM_DIS_DEFER": {
+        "mask": 768,
+        "shift": 8
+      }
+    }
+  },
+  "DP_STEER_FIFO": {
+    "abs_dword": 22571,
+    "fields": {
+      "DP_STEER_FIFO_ENABLE": {
+        "mask": 1,
+        "shift": 0
+      },
+      "DP_STEER_FIFO_RESET": {
+        "mask": 2,
+        "shift": 1
+      }
+    }
+  },
+  "DP_VID_TIMING": {
+    "abs_dword": 22574,
+    "fields": {
+      "DP_VID_M_N_GEN_EN": {
+        "mask": 256,
+        "shift": 8
+      },
+      "DP_VID_N_INTERVAL": {
+        "mask": 49152,
+        "shift": 14
+      }
+    }
+  },
+  "DP_VID_N": {
+    "abs_dword": 22575,
+    "fields": {
+      "DP_VID_N": {
+        "mask": 16777215,
+        "shift": 0
+      }
+    }
+  },
+  "DP_VID_M": {
+    "abs_dword": 22576,
+    "fields": {
+      "DP_VID_M": {
+        "mask": 16777215,
+        "shift": 0
+      }
+    }
+  },
+  "DP_PIXEL_FORMAT": {
+    "abs_dword": 22567,
+    "fields": {
+      "PIXEL_ENCODING_TYPE": {
+        "mask": 1,
+        "shift": 0
+      },
+      "UNCOMPRESSED_PIXEL_FORMAT": {
+        "mask": 48,
+        "shift": 4
+      },
+      "UNCOMPRESSED_COMPONENT_DEPTH": {
+        "mask": 1792,
+        "shift": 8
+      },
+      "COMPRESSED_PIXEL_FORMAT": {
+        "mask": 65536,
+        "shift": 16
+      }
+    }
+  },
+  "DP_MSA_COLORIMETRY": {
+    "abs_dword": 22568,
+    "fields": {
+      "DP_MSA_MISC0": {
+        "mask": 4278190080,
+        "shift": 24
+      }
+    }
+  },
+  "DIG_FIFO_CTRL0": {
+    "abs_dword": 22435,
+    "fields": {
+      "DIG_FIFO_ENABLE": {
+        "mask": 1,
+        "shift": 0
+      },
+      "DIG_FIFO_RESET": {
+        "mask": 2,
+        "shift": 1
+      },
+      "DIG_FIFO_READ_START_LEVEL": {
+        "mask": 124,
+        "shift": 2
+      },
+      "DIG_FIFO_RESET_DONE": {
+        "mask": 1048576,
+        "shift": 20
+      },
+      "DIG_FIFO_OUTPUT_PIXEL_PER_CYCLE": {
+        "mask": 768,
+        "shift": 8
+      }
+    }
+  },
+  "source_hashes": {
+    "offset": "cf309978e1c1ee5945c03eeb37edb459dae2b37238ac0e8c8b49c384961640f2",
+    "mask": "e3872af715f2cbabbe918e638e3ab7e6cfa65065a221cf2efc3bcf530af7b360"
+  }
+}

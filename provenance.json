@@ -1,0 +1,41 @@
+{
+  "Cobalt64": {
+    "url": "https://github.com/Almosst-DEV/Cobalt64",
+    "commit": "d6c9aedf8e6526a39e349b5886cbc8c7ddf77f65",
+    "changed_public_paths": [
+      "src/navi48-bringup/Info.plist",
+      "src/navi48-bringup/src/amd/native_agdc_pure.h",
+      "src/navi48-bringup/src/apple/DisplayPipeGuard.cpp",
+      "src/navi48-bringup/src/dcn/navi48_dcn.cpp",
+      "src/navi48-bringup/src/dcn/navi48_dispread.h",
+      "src/navi48-bringup/src/dcn/navi48_liveraster.h",
+      "src/navi48-bringup/tests/dcn_liveraster_test.cpp",
+      "src/navi48-bringup/tests/native_agdc_plant.sh",
+      "src/navi48-bringup/tests/native_agdc_test.cpp",
+      "src/navi48-bringup/tests/native_dispread_test.cpp",
+      "tools/native/mtlprobe/mtlprobe.m",
+      "tools/pc/navi48test.c",
+      "src/navi48-bringup/src/dcn/navi48_dto_clock.h",
+      "src/navi48-bringup/src/dcn/navi48_fwmeta_scan.h"
+    ]
+  },
+  "RDNA4FB": {
+    "commit": "5ff69aade9a7feb18bb665040661de33ccfe68ba"
+  },
+  "MacKernelSDK": {
+    "url": "https://github.com/acidanthera/MacKernelSDK",
+    "commit": "05094e5e88cec7caedbfb35e8449ed0db94bf95b"
+  },
+  "Mesa": {
+    "commit": "f5cb8ee032adabef599ae892ec4e42d796b84da9",
+    "patches": "Cobalt64 mesa-patches/0001..0009"
+  },
+  "metal2vulkan": {
+    "commit": "43c46ac8a24adf1a6e872b8a52c706ec9614fad0"
+  },
+  "AMD_register_headers": {
+    "linux_commit": "238650ef6c7c",
+    "path": "drivers/gpu/drm/amd/include/asic_reg/dcn/"
+  },
+  "export": "Source patchset only; private Apple ABI outputs, AIR/SPIR-V caches, VBIOS and firmware blobs excluded"
+}

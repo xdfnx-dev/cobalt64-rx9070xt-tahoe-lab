@@ -1,0 +1,94 @@
+{
+  "DP_LINK_CNTL": {
+    "abs_dword": 22566,
+    "fields": {
+      "DP_LINK_TRAINING_COMPLETE": {
+        "mask": 16,
+        "shift": 4
+      }
+    }
+  },
+  "DP_CONFIG": {
+    "abs_dword": 22569,
+    "fields": {
+      "DP_UDI_LANES": {
+        "mask": 3,
+        "shift": 0
+      }
+    }
+  },
+  "DP_DPHY_CNTL": {
+    "abs_dword": 22581,
+    "fields": {
+      "DPHY_BYPASS": {
+        "mask": 65536,
+        "shift": 16
+      }
+    }
+  },
+  "DP_DPHY_TRAINING_PATTERN_SEL": {
+    "abs_dword": 22582,
+    "fields": {
+      "DPHY_TRAINING_PATTERN_SEL": {
+        "mask": 3,
+        "shift": 0
+      }
+    }
+  },
+  "DP_DPHY_PRBS_CNTL": {
+    "abs_dword": 22587,
+    "fields": {
+      "DPHY_PRBS_EN": {
+        "mask": 1,
+        "shift": 0
+      }
+    }
+  },
+  "DP_DPHY_SCRAM_CNTL": {
+    "abs_dword": 22588,
+    "fields": {
+      "DPHY_SCRAMBLER_ADVANCE": {
+        "mask": 16,
+        "shift": 4
+      },
+      "DPHY_SCRAMBLER_BS_COUNT": {
+        "mask": 261888,
+        "shift": 8
+      }
+    }
+  },
+  "DP_LINK_FRAMING_CNTL": {
+    "abs_dword": 22577,
+    "fields": {
+      "DP_IDLE_BS_INTERVAL": {
+        "mask": 262143,
+        "shift": 0
+      },
+      "DP_VBID_DISABLE": {
+        "mask": 16777216,
+        "shift": 24
+      },
+      "DP_VID_ENHANCED_FRAME_MODE": {
+        "mask": 268435456,
+        "shift": 28
+      }
+    }
+  },
+  "DP_DPHY_INTERNAL_CTRL": {
+    "abs_dword": 22573,
+    "fields": {
+      "DPHY_ALT_SCRAMBLER_RESET_EN": {
+        "mask": 1,
+        "shift": 0
+      },
+      "DPHY_ALT_SCRAMBLER_RESET_SEL": {
+        "mask": 16,
+        "shift": 4
+      }
+    }
+  },
+  "sources": {
+    "dcn_4_1_0_offset.h": "cf309978e1c1ee5945c03eeb37edb459dae2b37238ac0e8c8b49c384961640f2",
+    "dcn_4_1_0_sh_mask.h": "e3872af715f2cbabbe918e638e3ab7e6cfa65065a221cf2efc3bcf530af7b360"
+  }
+}
